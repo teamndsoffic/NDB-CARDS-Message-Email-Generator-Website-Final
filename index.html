@@ -328,6 +328,10 @@
             .header h1 {
                 font-size: 20px;
             }
+            
+            .email-preview-footer {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -394,6 +398,9 @@
                 <button id="copyButton" class="btn btn-outline">
                     <i class="far fa-copy"></i> Copy to Clipboard
                 </button>
+                <button id="openEmailButton" class="btn btn-primary">
+                    <i class="fas fa-envelope-open"></i> Open in Email App
+                </button>
             </div>
         </div>
         
@@ -420,6 +427,10 @@
             }
             return transactionID;
         }
+
+        // Store email content for reuse
+        let emailSubject = "";
+        let emailBody = "";
 
         // Refresh button functionality
         document.getElementById('refreshButton').addEventListener('click', function() {
@@ -499,10 +510,11 @@
                 const minutesFormatted = minutes < 10 ? '0'+minutes : minutes;
                 const time = `${hours12}:${minutesFormatted} ${ampm}`;
                 
-                const emailBody = `Hey ${customerName},\n\n` +
-                                `You have successfully paid ₹${amount} to ${merchant} at ${time} IST, ${currentDate.toLocaleDateString('en-IN', {timeZone: 'Asia/Kolkata'})} with transaction ID ${transactionID}. Your updated balance is ₹${leftAmount}.\n\n` +
-                                `If this transaction was not authorized by you, please report it immediately to our customer service team at nilamdirectbankofindia@yahoo.com.\n\n` +
-                                `Best regards,\nNDB Card Support Team`;
+                emailSubject = `Payment Confirmation - Transaction ID: ${transactionID}`;
+                emailBody = `Hey ${customerName},\n\n` +
+                            `You have successfully paid ₹${amount} to ${merchant} at ${time} IST, ${currentDate.toLocaleDateString('en-IN', {timeZone: 'Asia/Kolkata'})} with transaction ID ${transactionID}. Your updated balance is ₹${leftAmount}.\n\n` +
+                            `If this transaction was not authorized by you, please report it immediately to our customer service team at nilamdirectbankofindia@yahoo.com.\n\n` +
+                            `Best regards,\nNDB Card Support Team`;
                 
                 // Display email preview
                 document.getElementById("emailContent").textContent = emailBody;
@@ -514,7 +526,6 @@
         });
 
         function copyToClipboard() {
-            const emailBody = document.getElementById("emailContent").textContent;
             const button = document.getElementById("copyButton");
             
             navigator.clipboard.writeText(emailBody)
@@ -540,8 +551,27 @@
                 .catch(err => console.error('Failed to copy:', err));
         }
 
+        function openInEmailApp() {
+            const button = document.getElementById("openEmailButton");
+            
+            // Create mailto link
+            const mailtoLink = `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+            
+            // Open default email client
+            window.location.href = mailtoLink;
+            
+            // Visual feedback
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Opening...';
+            
+            setTimeout(() => {
+                button.innerHTML = originalText;
+            }, 2000);
+        }
+
         // Add event listeners
         document.getElementById('copyButton').addEventListener('click', copyToClipboard);
+        document.getElementById('openEmailButton').addEventListener('click', openInEmailApp);
         
         // Input field validation on blur
         document.getElementById('customerName').addEventListener('blur', function() {
